@@ -26,7 +26,7 @@ def get_drinks():
     
 
 @app.route('/drinks-detail')
-# @requires_auth('get:drinks-detail')
+@requires_auth('get:drinks-detail')
 def get_drinks_detail():
     
     drinks = [drink.long() for drink in Drink.query.all()]
@@ -39,7 +39,7 @@ def get_drinks_detail():
 
 
 @app.route('/drinks', methods=['POST'])
-# @requires_auth('post:drinks')
+@requires_auth('post:drinks')
 def create_drink():
     req = request.get_json()
 
@@ -71,7 +71,7 @@ def create_drink():
 
 
 @app.route('/drinks/<int:id>', methods=['PATCH'])
-# @requires_auth('delete:drinks')
+@requires_auth('delete:drinks')
 def modify_drink(id):
     req = request.get_json()
     drink = Drink.query.filter(Drink.id == id).one_or_none()
@@ -102,7 +102,7 @@ def modify_drink(id):
 
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
-# @requires_auth('delete:drinks')
+@requires_auth('delete:drinks')
 def delete_drink(id):
 
     try:
@@ -121,11 +121,8 @@ def delete_drink(id):
         'delete': id
     }, 200)
 
-# Error Handling
-'''
-Example error handling for unprocessable entity
-'''
 
+# Error Handling
 
 @app.errorhandler(422)
 def unprocessable(error):
