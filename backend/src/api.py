@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify, abort, redirect, url_for
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
@@ -12,17 +12,24 @@ setup_db(app)
 CORS(app)
 
 db_drop_and_create_all()
-
 # ROUTES DEFINITION
+@app.route('/')
+def index():
+    return redirect(url_for('get_all_drinks'))
+
 @app.route('/drinks')
 def get_drinks():
 
     drinks = [drink.short() for drink in Drink.query.all()]
+
+    if drinks is None:
+        abort(404)
     
     return jsonify({
     'success': True,
-    'drinks': drinks
-    }, 200)
+    'drinks': drinks,
+    'total': len(drinks)
+    }), 200
     
 
 @app.route('/drinks-detail')
@@ -31,10 +38,14 @@ def get_drinks_detail():
     
     drinks = [drink.long() for drink in Drink.query.all()]
 
+    if drinks is None:
+        abort(404)
+
     return jsonify({
     'success': True,
-    'drinks': drinks
-    }, 200)
+    'drinks': drinks,
+    'total': len(drinks)
+    }), 200
 
 
 
@@ -67,7 +78,7 @@ def create_drink():
     return jsonify({
         'success': True,
         'drinks': [new_Drink.long()]
-    }, 201)
+    }), 201
 
 
 @app.route('/drinks/<int:id>', methods=['PATCH'])
@@ -97,7 +108,8 @@ def modify_drink(id):
 
     return jsonify({
         'success': True,
-        'drinks': [drink.long() for drink in Drink.query.all()]
+        'drinks': [drink.long() for drink in Drink.query.all()],
+        'total': len([drink.long() for drink in Drink.query.all()])
         })
 
 
@@ -119,10 +131,18 @@ def delete_drink(id):
     return jsonify({
         'success': True,
         'delete': id
-    }, 200)
+    }), 200
 
 
 # Error Handling
+
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return({
+        'success': False,
+        'error': error.status_code,
+        'message': 'Unathorised'
+    }), 401
 
 @app.errorhandler(422)
 def unprocessable(error):
@@ -132,25 +152,35 @@ def unprocessable(error):
         "message": "unprocessable"
     }), 422
 
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+        }), 404
 
-'''
-@TODO implement error handlers using the @app.errorhandler(error) decorator
-    each error handler should return (with approprate messages):
-             jsonify({
-                    "success": False,
-                    "error": 404,
-                    "message": "resource not found"
-                    }), 404
+@app.errorhandler(400)
+def bad_request(error):
+    return({
+        'success': False,
+        'error': 400,
+        'message': 'Bad Request'
+    }), 400
 
-'''
+@app.errorhandler(403)
+def forbidden(error):
+    return({
+        'success': False,
+        'error': 403,
+        'message': 'Forbidden'
+    }), 403
 
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above
-'''
 
-
-'''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above
-'''
+@app.errorhandler(405)
+def method_not_allowed(error):
+    return({
+        'success': False,
+        'error': 405,
+        'message': 'Method Not All  wed'
+    }), 405
