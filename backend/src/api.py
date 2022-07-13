@@ -11,13 +11,14 @@ app = Flask(__name__)
 setup_db(app)
 CORS(app)
 
+
 '''
 @TODO uncomment the following line to initialize the datbase
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
 '''
@@ -29,6 +30,16 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks')
+def get_drinks():
+
+    drinks = [drink.short() for drink in Drink.query.all()]
+    
+    return jsonify({
+    'success': True,
+    'drinks': drinks
+    }, 200)
+    
 
 '''
 @TODO implement endpoint
@@ -38,6 +49,16 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+# @requires_auth('get:drinks-detail')
+def get_drinks_detail():
+    
+    drinks = [drink.long() for drink in Drink.query.all()]
+
+    return jsonify({
+    'success': True,
+    'drinks': drinks
+    }, 200)
 
 
 '''
@@ -49,6 +70,37 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+@app.route('/drinks', methods=['POST'])
+# @requires_auth('post:drinks')
+def create_drink():
+    req = request.get_json()
+
+    if 'title' and 'recipe' not in req:
+        abort(422)
+
+    my_recipe = req['recipe']
+    if isinstance(my_recipe, dict):
+        my_recipe = [my_recipe]
+
+    try:
+        drink_title = req['title']
+        drink_recipe = json.dumps(my_recipe)
+
+        new_Drink = Drink(
+            title=drink_title,
+            recipe=drink_recipe
+        )
+
+        new_Drink.insert()
+
+    except:
+        abort(400)
+
+    return jsonify({
+        'success': True,
+        'drinks': [new_Drink.long()]
+    }, 201)
 
 
 '''
@@ -62,6 +114,32 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+# @requires_auth('delete:drinks')
+def modify_drink(id):
+    req = request.get_json()
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+
+    if 'title' and 'recipe' not in req:
+        abort(422)
+
+    my_recipe = req['recipe']
+    if isinstance(my_recipe, dict):
+        my_recipe = [my_recipe]
+    
+    try:
+        drink_title = req['title']
+        drink_recipe = json.dumps(my_recipe)
+
+        drink.title = drink_title
+        drink.recipe = drink_recipe
+    except:
+        abort(400)
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long() for drink in Drink.query.all()]
+        })
 
 
 '''
@@ -75,6 +153,25 @@ CORS(app)
         or appropriate status code indicating reason for failure
 '''
 
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+# @requires_auth('delete:drinks')
+def delete_drink(id):
+
+    try:
+        drink = Drink.query.filter(Drink.id == id).one_or_none()
+
+        if drink is None:
+            abort(404)
+
+        drink.delete()
+        
+    except:
+        abort(422)
+
+    return jsonify({
+        'success': True,
+        'delete': id
+    })
 
 # Error Handling
 '''
