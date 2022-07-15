@@ -120,7 +120,7 @@ def modify_drink(id):
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(id):
+def delete_drink(id, auth):
 
     try:
         drink = Drink.query.filter(Drink.id == id).one_or_none()
