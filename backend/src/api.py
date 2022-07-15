@@ -12,10 +12,12 @@ setup_db(app)
 CORS(app)
 
 db_drop_and_create_all()
+
+
 # ROUTES DEFINITION
 @app.route('/')
 def index():
-    return redirect(url_for('get_all_drinks'))
+    return redirect(url_for('get_drinks'))
 
 @app.route('/drinks')
 def get_drinks():
@@ -34,7 +36,7 @@ def get_drinks():
 
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def get_drinks_detail():
+def get_drinks_details():
     
     drinks = [drink.long() for drink in Drink.query.all()]
 
@@ -46,7 +48,6 @@ def get_drinks_detail():
     'drinks': drinks,
     'total': len(drinks)
     }), 200
-
 
 
 @app.route('/drinks', methods=['POST'])
@@ -82,7 +83,7 @@ def create_drink():
 
 
 @app.route('/drinks/<int:id>', methods=['PATCH'])
-@requires_auth('delete:drinks')
+@requires_auth('patch:drinks')
 def modify_drink(id):
     req = request.get_json()
     drink = Drink.query.filter(Drink.id == id).one_or_none()
@@ -98,11 +99,15 @@ def modify_drink(id):
         my_recipe = [my_recipe]
     
     try:
-        drink_title = req['title']
-        drink_recipe = json.dumps(my_recipe)
+        new_drink_title = req['title']
+        new_drink_recipe = json.dumps(my_recipe)
 
-        drink.title = drink_title
-        drink.recipe = drink_recipe
+        if drink.title:
+            drink.title = new_drink_title
+
+        if drink.recipe:
+            drink.recipe = new_drink_recipe
+        
     except:
         abort(400)
 
@@ -141,23 +146,23 @@ def auth_error(error):
     return({
         'success': False,
         'error': error.status_code,
-        'message': 'Unathorised'
+        'message': 'Unathorized'
     }), 401
 
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False,
-        "error": 422,
-        "message": "unprocessable"
+        'success': False,
+        'error': 422,
+        'message': 'unprocessable'
     }), 422
 
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({
-        "success": False,
-        "error": 404,
-        "message": "resource not found"
+        'success': False,
+        'error': 404,
+        'message': 'resource not found'
         }), 404
 
 @app.errorhandler(400)
