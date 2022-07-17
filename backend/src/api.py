@@ -33,10 +33,9 @@ def get_drinks():
     'total': len(drinks)
     }), 200
     
-
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def get_drinks_details():
+def get_drinks_detail():
     
     drinks = [drink.long() for drink in Drink.query.all()]
 
@@ -66,19 +65,19 @@ def create_drink():
         drink_title = req['title']
         drink_recipe = json.dumps(my_recipe)
 
-        new_Drink = Drink(
+        new_drink = Drink(
             title=drink_title,
             recipe=drink_recipe
         )
 
-        new_Drink.insert()
+        new_drink.insert()
 
     except:
         abort(400)
 
     return jsonify({
         'success': True,
-        'drinks': [new_Drink.long()]
+        'drinks': [new_drink.long()]
     }), 201
 
 
@@ -115,12 +114,12 @@ def modify_drink(id):
         'success': True,
         'drinks': [drink.long() for drink in Drink.query.all()],
         'total': len([drink.long() for drink in Drink.query.all()])
-        })
+        }), 200
 
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(id, auth):
+def delete_drink(id):
 
     try:
         drink = Drink.query.filter(Drink.id == id).one_or_none()
@@ -136,14 +135,14 @@ def delete_drink(id, auth):
     return jsonify({
         'success': True,
         'delete': id
-    }), 200
+        }), 200
 
 
 # Error Handling
 
 @app.errorhandler(AuthError)
 def auth_error(error):
-    return({
+    return jsonify({
         'success': False,
         'error': error.status_code,
         'message': 'Unathorized'
@@ -167,7 +166,7 @@ def not_found(error):
 
 @app.errorhandler(400)
 def bad_request(error):
-    return({
+    return jsonify({
         'success': False,
         'error': 400,
         'message': 'Bad Request'
@@ -175,7 +174,7 @@ def bad_request(error):
 
 @app.errorhandler(403)
 def forbidden(error):
-    return({
+    return jsonify({
         'success': False,
         'error': 403,
         'message': 'Forbidden'
@@ -184,8 +183,8 @@ def forbidden(error):
 
 @app.errorhandler(405)
 def method_not_allowed(error):
-    return({
+    return jsonify({
         'success': False,
         'error': 405,
-        'message': 'Method Not All  wed'
+        'message': 'Method Not Allowed'
     }), 405
