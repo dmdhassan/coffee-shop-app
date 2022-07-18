@@ -112,7 +112,7 @@ def modify_drink(auth, id):
 
     return jsonify({
         'success': True,
-        'drinks': [drink.long() for drink in Drink.query.all()],
+        'drinks': [drink.long()],
         'total': len([drink.long() for drink in Drink.query.all()])
         }), 200
 
