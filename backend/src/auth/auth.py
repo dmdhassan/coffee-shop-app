@@ -59,7 +59,7 @@ def check_permission(permission, payload):
     if 'permissions' not in payload:
         abort(400)
     if permission not in payload['permissions']:
-        abort(401)
+        abort(403)
     return True
 
 
@@ -105,7 +105,7 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code': 'invalid_claims',
                 'description': 'Incorrect claims. Please, check the audience and issuer.'
-            }, 401)
+            }, 403)
         except Exception:
             raise AuthError({
                 'code': 'invalid_header',
@@ -128,5 +128,7 @@ def requires_auth(permission=''):
                 abort(401)
             check_permission(permission, payload)
             return f(payload, *args, **kwargs)
+
         return wrapper
+
     return requires_auth_decorator

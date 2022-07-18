@@ -35,7 +35,7 @@ def get_drinks():
     
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def get_drinks_detail():
+def get_drinks_detail(auth):
     
     drinks = [drink.long() for drink in Drink.query.all()]
 
@@ -51,7 +51,7 @@ def get_drinks_detail():
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def create_drink():
+def create_drink(auth):
     req = request.get_json()
 
     if 'title' and 'recipe' not in req:
@@ -78,12 +78,12 @@ def create_drink():
     return jsonify({
         'success': True,
         'drinks': [new_drink.long()]
-    }), 201
+    }), 200
 
 
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def modify_drink(id):
+def modify_drink(auth, id):
     req = request.get_json()
     drink = Drink.query.filter(Drink.id == id).one_or_none()
 
@@ -119,7 +119,7 @@ def modify_drink(id):
 
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(id):
+def delete_drink(auth, id):
 
     try:
         drink = Drink.query.filter(Drink.id == id).one_or_none()
